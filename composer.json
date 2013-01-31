@@ -1,0 +1,20 @@
+{
+    "name": "snakano/propel-data-cache-behavior",
+    "description": "propel data cache behavior",
+    "keywords": ["propel", "behavior", "cache"],
+    "license": "MIT",
+    "authors": [
+        {
+            "name": "Shinya Nakano",
+            "email": "s.nakano@do-mino.jp"
+        }
+    ],
+    "autoload": {
+        "classmap": ["src/"]
+    },
+    "require": {
+        "php": ">=5.3.3",
+        "propel/propel1": "1.6.*",
+        "snakano/cache-store": "dev-master"
+    }
+}
