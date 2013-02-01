@@ -84,7 +84,7 @@ BookQuery::create()
 
 BookQuery::create()
     ->filterByTitle($title)
-    ->findObe(); // from caching system
+    ->findOne(); // from caching system
 ```
 
 ### Disable cache
