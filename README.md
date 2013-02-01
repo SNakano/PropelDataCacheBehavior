@@ -7,6 +7,12 @@ The Propel Data Cache Behavior provide data cacaching.
 - auto caching and auto flush.
 
 
+### What's the difference [Query Cache Behavior](http://propelorm.org/behaviors/query-cache.html)
+
+Query Cache Behavior is caching transformation of a Query object (caching SQL code).<br />
+This Behavior is caching the results of database. (result cache)
+
+
 Requirements
 ------------
 
@@ -36,7 +42,7 @@ propel.behavior.data_cache.class = vendor.propel-datacache-behavior.src.DataCach
 Usage
 -----
 
-## schema.xml
+### schema.xml
 
 ```xml
 <table name="book">
@@ -50,7 +56,7 @@ Usage
 </table>
 ```
 
-## if use memcached.
+### if use memcached.
 
 ```php
 // configure memcached setting.
@@ -68,7 +74,7 @@ Domino\Factory::setOption(
 
 ```
 
-## Basic usage
+### Basic usage
 
 ```php
 $title = 'War And Peace';
@@ -81,7 +87,7 @@ BookQuery::create()
     ->findObe(); // from caching system
 ```
 
-## Disable cache
+### Disable cache
 
 ```php
 $title = 'Anna Karenina';
@@ -97,7 +103,7 @@ BookQuery::create()
 - setLifetime($ttl)
 
 
-## When cache delete?
+### When cache delete?
 
 ```php
 $book = new Book;
