@@ -108,7 +108,7 @@ public function getCacheKey()
     }
     \$params      = array();
     \$sql_hash    = hash('md4', BasePeer::createSelectSql(\$this, \$params));
-    \$params_hash = hash('md4', json_enocde(\$params));
+    \$params_hash = hash('md4', json_encode(\$params));
 
     \$this->cacheKey = \$sql_hash . '_' . \$params_hash;
 
