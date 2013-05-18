@@ -60,9 +60,9 @@ Usage
 
 ```php
 // configure memcached setting.
-Domino\Factory::setOption(
+Domino\CacheStore\Factory::setOption(
     array(
-        'strage'      => 'memcached',
+        'storage'     => 'memcached',
         'prefix'      => 'domino_test',
         'default_ttl' => 360,
         'servers'     => array(
