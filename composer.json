@@ -15,6 +15,6 @@
     "require": {
         "php": ">=5.3.3",
         "propel/propel1": "1.6.*",
-        "snakano/cache-store": "dev-master"
+        "snakano/cache-store": "1.*"
     }
 }

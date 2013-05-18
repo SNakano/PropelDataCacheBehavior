@@ -27,7 +27,7 @@ using Composer(recommended):
 ```javascript
 {
     "require": {
-        "snakano/propel-data-cache-behavior": "dev-master"
+        "snakano/propel-data-cache-behavior": "1.*"
     }
 }
 ```
