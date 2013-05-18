@@ -17,18 +17,29 @@ class DataCacheBehaviorTest extends \PHPUnit_Framework_TestCase
 {
     public function setUp()
     {
-        if (!ini_get('apc.enable_cli')) {
-            $this->markTestSkipped("APC is not enabled");
+        if (!extension_loaded('memcached')) {
+            $this->markTestSkipped("Memcached extension is not loaded");
         }
 
-        if (!class_exists("DataCacheBehaviorApcTest")) {
+        Domino\CacheStore\Factory::setOption(
+            array(
+                'storage'     => 'memcached',
+                'prefix'      => 'datacache_test',
+                'default_ttl' => 360,
+                'servers'     => array(
+                    array('localhost', 11211, 20)
+                )
+            )
+        );
+
+        if (!class_exists("DataCacheBehaviorMemcachedTest")) {
             $schema = <<<EOF
-<database name="data_cache_behavior_apc_test" defaultIdMethod="native">
-    <table name="data_cache_behavior_apc_test">
+<database name="data_cache_behavior_memcached_test" defaultIdMethod="native">
+    <table name="data_cache_behavior_memcached_test">
         <column name="id" required="true" primaryKey="true" type="INTEGER" />
         <column name="name" type="VARCHAR" required="true" />
         <behavior name="data_cache">
-            <parameter name="backend" value="apc" />
+            <parameter name="backend" value="memcached" />
         </behavior>
     </table>
 </database>
@@ -36,7 +47,7 @@ EOF;
             $this->getBuilder($schema)->build();
         }
 
-        DataCacheBehaviorApcTestPeer::doDeleteAll();
+        DataCacheBehaviorMemcachedTestPeer::doDeleteAll();
         Propel::disableInstancePooling();
     }
 
@@ -44,9 +55,9 @@ EOF;
     {
         $this->setData(100, "foo");
 
-        $expected = DataCacheBehaviorApcTestQuery::create()->findById(100);
-        $this->deleteDirect("data_cache_behavior_apc_test", 100);
-        $actual = DataCacheBehaviorApcTestQuery::create()->findById(100);
+        $expected = DataCacheBehaviorMemcachedTestQuery::create()->findById(100);
+        $this->deleteDirect("data_cache_behavior_memcached_test", 100);
+        $actual = DataCacheBehaviorMemcachedTestQuery::create()->findById(100);
 
         $this->assertEquals($expected, $actual);
     }
@@ -55,9 +66,9 @@ EOF;
     {
         $this->setData(100, "foo");
 
-        $expected = DataCacheBehaviorApcTestQuery::create()->findOneById(100);
-        $this->deleteDirect("data_cache_behavior_apc_test", 100);
-        $actual = DataCacheBehaviorApcTestQuery::create()->findOneById(100);
+        $expected = DataCacheBehaviorMemcachedTestQuery::create()->findOneById(100);
+        $this->deleteDirect("data_cache_behavior_memcached_test", 100);
+        $actual = DataCacheBehaviorMemcachedTestQuery::create()->findOneById(100);
 
         $this->assertEquals($expected, $actual);
     }
@@ -66,9 +77,9 @@ EOF;
     {
         $this->setData(100, "foo");
 
-        $expected = DataCacheBehaviorApcTestQuery::create()->findOneById(100);
-        $this->deleteDirect("data_cache_behavior_apc_test", 100);
-        $actual = DataCacheBehaviorApcTestQuery::create()->findOneById(100);
+        $expected = DataCacheBehaviorMemcachedTestQuery::create()->findOneById(100);
+        $this->deleteDirect("data_cache_behavior_memcached_test", 100);
+        $actual = DataCacheBehaviorMemcachedTestQuery::create()->findOneById(100);
 
         $this->assertEquals($expected, $actual);
     }
@@ -77,21 +88,21 @@ EOF;
     {
         $this->setData(100, "foo");
 
-        $obj = DataCacheBehaviorApcTestQuery::create()->findOneById(100);
+        $obj = DataCacheBehaviorMemcachedTestQuery::create()->findOneById(100);
         $obj->setName("bar");
         $obj->save();
 
-        $this->assertEquals($obj, DataCacheBehaviorApcTestQuery::create()->findOneById(100));
+        $this->assertEquals($obj, DataCacheBehaviorMemcachedTestQuery::create()->findOneById(100));
     }
 
     public function testDelete()
     {
         $this->setData(100, "foo");
 
-        $obj = DataCacheBehaviorApcTestQuery::create()->findOneById(100);
+        $obj = DataCacheBehaviorMemcachedTestQuery::create()->findOneById(100);
         $obj->delete();
 
-        $this->assertNull(DataCacheBehaviorApcTestQuery::create()->findOneById(100));
+        $this->assertNull(DataCacheBehaviorMemcachedTestQuery::create()->findOneById(100));
     }
 
     public function testDeleteAll()
@@ -99,17 +110,17 @@ EOF;
         $this->setData(100, "foo");
         $this->setData(200, "bar");
 
-        DataCacheBehaviorApcTestQuery::create()->findOneById(100);
-        DataCacheBehaviorApcTestQuery::create()->findOneById(200);
-        DataCacheBehaviorApcTestPeer::doDeleteAll();
+        DataCacheBehaviorMemcachedTestQuery::create()->findOneById(100);
+        DataCacheBehaviorMemcachedTestQuery::create()->findOneById(200);
+        DataCacheBehaviorMemcachedTestPeer::doDeleteAll();
 
-        $this->assertNull(DataCacheBehaviorApcTestQuery::create()->findOneById(100));
-        $this->assertNull(DataCacheBehaviorApcTestQuery::create()->findOneById(200));
+        $this->assertNull(DataCacheBehaviorMemcachedTestQuery::create()->findOneById(100));
+        $this->assertNull(DataCacheBehaviorMemcachedTestQuery::create()->findOneById(200));
     }
 
     public function testCacheEnableFlag()
     {
-        $obj = DataCacheBehaviorApcTestQuery::create();
+        $obj = DataCacheBehaviorMemcachedTestQuery::create();
         $this->assertTrue($obj->isCacheEnable());
         $obj->setCacheDisable();
         $this->assertFalse($obj->isCacheEnable());
@@ -120,14 +131,14 @@ EOF;
     public function testCacheSkip()
     {
         $this->setData(100, "foo");
-        DataCacheBehaviorApcTestQuery::create()->setCacheDisable()->findOneById(100);
-        $this->deleteDirect("data_cache_behavior_apc_test", 100);
-        $this->assertNull(DataCacheBehaviorApcTestQuery::create()->findOneById(100));
+        DataCacheBehaviorMemcachedTestQuery::create()->setCacheDisable()->findOneById(100);
+        $this->deleteDirect("data_cache_behavior_memcached_test", 100);
+        $this->assertNull(DataCacheBehaviorMemcachedTestQuery::create()->findOneById(100));
     }
 
     private function setData($id, $name)
     {
-        $obj = new DataCacheBehaviorApcTest;
+        $obj = new DataCacheBehaviorMemcachedTest;
         $obj->setId($id)
             ->setName($name)
             ->save();
