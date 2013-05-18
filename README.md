@@ -1,5 +1,6 @@
 PropelDataCacheBehavior
 ==========================
+[![Build Status](https://travis-ci.org/SNakano/PropelDataCacheBehavior.png)](https://travis-ci.org/SNakano/PropelDataCacheBehavior)
 
 The Propel Data Cache Behavior provide data cacaching.
 
