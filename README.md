@@ -18,7 +18,7 @@ Requirements
 ------------
 
 - Propel >= 1.6.0
-- [DominoDataCache](https://github.com/SNakano/DataCache)
+- [DominoCacheStore](https://github.com/SNakano/CacheStore)
 
 
 Install
@@ -28,7 +28,7 @@ using Composer(recommended):
 ```javascript
 {
     "require": {
-        "snakano/propel-data-cache-behavior": "dev-master"
+        "snakano/propel-data-cache-behavior": "1.*"
     }
 }
 ```
