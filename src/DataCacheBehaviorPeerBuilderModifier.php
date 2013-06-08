@@ -52,7 +52,7 @@ class DataCacheBehaviorPeerBuilderModifier
         $script .= "
 public static function purgeCache()
 {
-    return Domino\CacheStore\Factory::factory('{$backend}')->clearByNamespace(self::TABLE_NAME);
+    return \Domino\CacheStore\Factory::factory('{$backend}')->clearByNamespace(self::TABLE_NAME);
 }
         ";
     }
@@ -64,7 +64,7 @@ public static function purgeCache()
         $script .= "
 public static function cacheFetch(\$key)
 {
-    return Domino\CacheStore\Factory::factory('{$backend}')->get(self::TABLE_NAME, \$key);
+    return \Domino\CacheStore\Factory::factory('{$backend}')->get(self::TABLE_NAME, \$key);
 }
         ";
     }
@@ -76,7 +76,7 @@ public static function cacheFetch(\$key)
         $script .= "
 public static function cacheStore(\$key, \$data, \$lifetime)
 {
-    return Domino\CacheStore\Factory::factory('{$backend}')->set(self::TABLE_NAME, \$key, \$data, \$lifetime);
+    return \Domino\CacheStore\Factory::factory('{$backend}')->set(self::TABLE_NAME, \$key, \$data, \$lifetime);
 }
         ";
     }
