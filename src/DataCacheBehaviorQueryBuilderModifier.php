@@ -40,6 +40,8 @@ protected \$cacheLifeTime = {$lifetime};
 
     public function queryMethods($builder)
     {
+        $builder->declareClasses('BasePeer');
+        
         $this->builder = $builder;
 
         $script = "";
