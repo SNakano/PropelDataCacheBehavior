@@ -60,11 +60,29 @@ public static function purgeCache()
     protected function addCacheFetch(&$script)
     {
         $backend = $this->behavior->getParameter("backend");
+        $peerClassname = $this->builder->getStubPeerBuilder()->getClassname();
 
         $script .= "
 public static function cacheFetch(\$key)
 {
-    return \Domino\CacheStore\Factory::factory('{$backend}')->get(self::TABLE_NAME, \$key);
+    \$result = \Domino\CacheStore\Factory::factory('{$backend}')->get(self::TABLE_NAME, \$key);
+
+    if (\$result !== null)
+    {
+      if (\$result instanceof ArrayAccess)
+      {
+        foreach(\$result as \$element)
+        {
+          {$peerClassname}::addInstanceToPool(\$element);
+        }
+      }
+      else
+      {
+        {$peerClassname}::addInstanceToPool(\$result);
+      }
+    }
+
+    return \$result;
 }
         ";
     }
