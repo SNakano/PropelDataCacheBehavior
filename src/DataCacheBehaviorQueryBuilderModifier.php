@@ -24,6 +24,20 @@ class DataCacheBehaviorQueryBuilderModifier
         $this->behavior = $behavior;
     }
 
+    public function postUpdateQuery($builder)
+    {
+        $peerClassname = $builder->getStubPeerBuilder()->getClassname();
+
+        return "{$peerClassname}::purgeCache();";
+    }
+
+    public function postDeleteQuery($builder)
+    {
+        $peerClassname = $builder->getStubPeerBuilder()->getClassname();
+
+        return "{$peerClassname}::purgeCache();";
+    }
+
     public function queryAttributes($builder)
     {
         $lifetime   = $this->behavior->getParameter("lifetime");

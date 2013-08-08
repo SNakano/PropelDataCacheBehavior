@@ -1,4 +1,9 @@
 <?php
+require_once( 'DataCacheBehaviorPeerBuilderModifier.php' );
+require_once( 'DataCacheBehaviorObjectBuilderModifier.php' );
+require_once( 'DataCacheBehaviorQueryBuilderModifier.php' );
+require_once( 'util/PropelPHPParser.php' );
+
 /**
  * Propel Data Cache Behavior
  *
