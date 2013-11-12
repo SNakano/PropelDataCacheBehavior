@@ -32,6 +32,7 @@ class DataCacheBehaviorPeerBuilderModifier
         $this->addPurgeCache($script);
         $this->addCacheFetch($script);
         $this->addCacheStore($script);
+        $this->addCacheDelete($script);
 
         return $script;
     }
@@ -61,6 +62,7 @@ public static function purgeCache()
     {
         $backend = $this->behavior->getParameter("backend");
         $peerClassname = $this->builder->getStubPeerBuilder()->getClassname();
+        $objectClassname = $this->builder->getStubObjectBuilder()->getClassname();
 
         $script .= "
 public static function cacheFetch(\$key)
@@ -69,10 +71,12 @@ public static function cacheFetch(\$key)
 
     if (\$result !== null) {
         if (\$result instanceof ArrayAccess) {
-            foreach(\$result as \$element) {
-                {$peerClassname}::addInstanceToPool(\$element);
+            foreach (\$result as \$element) {
+                if (\$element instanceof {$objectClassname}) {
+                    {$peerClassname}::addInstanceToPool(\$element);
+                }
             }
-        } else {
+        } else if (\$result instanceof {$objectClassname}) {
             {$peerClassname}::addInstanceToPool(\$result);
         }
     }
@@ -94,15 +98,29 @@ public static function cacheStore(\$key, \$data, \$lifetime)
         ";
     }
 
+    protected function addCacheDelete(&$script)
+    {
+        $backend = $this->behavior->getParameter("backend");
+
+        $script .= "
+public static function cacheDelete(\$key)
+{
+    return \Domino\CacheStore\Factory::factory('{$backend}')->clear(self::TABLE_NAME, \$key);
+}
+        ";
+    }
+
     protected function replaceDoDeleteAll(&$parser)
     {
         $peerClassname = $this->builder->getStubPeerBuilder()->getClassname();
+        $tableName = $this->builder->getStubObjectBuilder()->getTable()->getName();
 
         $script = "
+
     /**
-     * Deletes all rows from the table.
+     * Deletes all rows from the $tableName table.
      *
-     * @param  PropelPDO        \$con the connection to use
+     * @param      PropelPDO \$con the connection to use
      * @return int             The number of affected rows (if supported by underlying database driver).
      * @throws PropelException
      */
@@ -130,8 +148,7 @@ public static function cacheStore(\$key, \$data, \$lifetime)
             \$con->rollBack();
             throw \$e;
         }
-    }
-        ";
+    }";
 
         $parser->replaceMethod("doDeleteAll", $script);
     }

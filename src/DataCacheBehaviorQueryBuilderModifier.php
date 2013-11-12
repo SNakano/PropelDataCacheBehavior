@@ -33,9 +33,7 @@ class DataCacheBehaviorQueryBuilderModifier
 
     public function postDeleteQuery($builder)
     {
-        $peerClassname = $builder->getStubPeerBuilder()->getClassname();
-
-        return "{$peerClassname}::purgeCache();";
+        return $this->postUpdateQuery($builder);
     }
 
     public function queryAttributes($builder)
@@ -63,6 +61,7 @@ protected \$cacheLifeTime = {$lifetime};
         $this->addSetCacheDisable($script);
         $this->addIsCacheEnable($script);
         $this->addGetCacheKey($script);
+        $this->addSetCacheKey($script);
         $this->addSetLifeTime($script);
         $this->addGetLifeTime($script);
         $this->addFind($script);
@@ -133,6 +132,18 @@ public function getCacheKey()
         ";
     }
 
+    protected function addSetCacheKey(&$script)
+    {
+        $script .= "
+public function setCacheKey(\$cacheKey)
+{
+    \$this->cacheKey = \$cacheKey;
+
+    return \$this;
+}
+";
+    }
+
     protected function addSetLifeTime(&$script)
     {
         $script .= "
@@ -157,6 +168,7 @@ public function getLifeTime()
 
     protected function addFind(&$script)
     {
+        $className = $this->builder->getStubObjectBuilder()->getClassname();
         $peerClassname = $this->builder->getStubPeerBuilder()->getClassname();
 
         $script .= "
@@ -195,6 +207,7 @@ public function find(\$con = null)
 
     protected function addFindOne(&$script)
     {
+        $className = $this->builder->getStubObjectBuilder()->getClassname();
         $peerClassname = $this->builder->getStubPeerBuilder()->getClassname();
 
         $script .= "
@@ -210,7 +223,9 @@ public function find(\$con = null)
 public function findOne(\$con = null)
 {
     if (\$this->isCacheEnable() && \$cache = {$peerClassname}::cacheFetch(\$this->getCacheKey())) {
-        return \$cache;
+        if (\$cache instanceof {$className}) {
+            return \$cache;
+        }
     }
 
     if (\$con === null) {
@@ -234,20 +249,24 @@ public function findOne(\$con = null)
 
     protected function replaceFindPk(&$parser)
     {
+        $className = $this->builder->getStubObjectBuilder()->getClassname();
         $peerClassname = $this->builder->getStubPeerBuilder()->getClassname();
 
         $script = "
     /**
-     * Find object by primary key
-     * Use instance pooling to avoid a database query if the object exists
+     * Find object by primary key.
+     * Propel uses the instance pool to skip the database if the object exists.
+     * Go fast if the query is untouched.
+     *
      * <code>
      * \$obj  = \$c->findPk(12, \$con);
      * \$obj  = \$c->findPk(array(1, 2), \$con);  # multiple primary keys
      * </code>
-     * @param     mixed \$key Primary key to use for the query
+     *
+     * @param mixed \$key Primary key to use for the query
      * @param     PropelPDO \$con an optional connection object
      *
-     * @return User|array|mixed the result, formatted by the current formatter
+     * @return   {$className}|{$className}[]|mixed the result, formatted by the current formatter
      */
     public function findPk(\$key, \$con = null)
     {

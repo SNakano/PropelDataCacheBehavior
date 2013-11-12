@@ -32,8 +32,6 @@ class DataCacheBehaviorObjectBuilderModifier
 
     public function postDelete($builder)
     {
-        $peerClassname = $builder->getStubPeerBuilder()->getClassname();
-
-        return "{$peerClassname}::purgeCache();";
+        return $this->postSave($builder);
     }
 }
