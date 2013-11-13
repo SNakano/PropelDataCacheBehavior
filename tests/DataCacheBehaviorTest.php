@@ -136,6 +136,18 @@ EOF;
         $this->assertNull(DataCacheBehaviorMemcachedTestQuery::create()->findOneById(100));
     }
 
+    public function testCacheDelete()
+    {
+        $this->setData(100, "foo");
+        $query = DataCacheBehaviorMemcachedTestQuery::create();
+        $query->findOneById(100);
+        $cacheKey = $query->getCacheKey();
+
+        DataCacheBehaviorMemcachedTestPeer::cacheDelete($query->getCacheKey());
+        $result = Domino\CacheStore\Factory::factory("memcached")->get("data_cache_behavior_memcached_test", $cacheKey);
+        $this->assertNull($result);
+    }
+
     private function setData($id, $name)
     {
         $obj = new DataCacheBehaviorMemcachedTest;
