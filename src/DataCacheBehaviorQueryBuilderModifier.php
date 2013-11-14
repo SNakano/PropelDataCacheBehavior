@@ -53,7 +53,7 @@ protected \$cacheLifeTime = {$lifetime};
     public function queryMethods($builder)
     {
         $builder->declareClasses('BasePeer');
-        
+
         $this->builder = $builder;
 
         $script = "";
@@ -249,49 +249,11 @@ public function findOne(\$con = null)
 
     protected function replaceFindPk(&$parser)
     {
-        $className = $this->builder->getStubObjectBuilder()->getClassname();
-        $peerClassname = $this->builder->getStubPeerBuilder()->getClassname();
+        $search  = "return \$this->findPkSimple(\$key, \$con);";
+        $replace = "return \$this->filterByPrimaryKey(\$key)->findOne(\$con);";
+        $script  = $parser->findMethod('findPk');
+        $script  = str_replace($search, $replace, $script);
 
-        $script = "
-    /**
-     * Find object by primary key.
-     * Propel uses the instance pool to skip the database if the object exists.
-     * Go fast if the query is untouched.
-     *
-     * <code>
-     * \$obj  = \$c->findPk(12, \$con);
-     * \$obj  = \$c->findPk(array(1, 2), \$con);  # multiple primary keys
-     * </code>
-     *
-     * @param mixed \$key Primary key to use for the query
-     * @param     PropelPDO \$con an optional connection object
-     *
-     * @return   {$className}|{$className}[]|mixed the result, formatted by the current formatter
-     */
-    public function findPk(\$key, \$con = null)
-    {
-        if (is_array(\$key)) {
-            \$keys = array();
-            foreach (\$key as \$k) {
-                \$keys[] = (string) \$k;
-            }
-            \$pool_key = serialize(\$keys);
-        } else {
-            \$pool_key = \$key;
-        }
-
-        if ((null !== (\$obj = {$peerClassname}::getInstanceFromPool(\$pool_key))) && \$this->getFormatter()->isObjectFormatter()) {
-            // the object is alredy in the instance pool
-            return \$obj;
-        } else {
-            // the object has not been requested yet, or the formatter is not an object formatter
-            \$criteria = \$this->isKeepQuery() ? clone \$this : \$this;
-
-            return \$this->filterByPrimaryKey(\$key)->findOne(\$con);
-        }
-    }
-        ";
-
-        $parser->replaceMethod("findPk", $script);
+        $parser->replaceMethod('findPk', $script);
     }
 }

@@ -59,6 +59,8 @@ EOF;
         $this->deleteDirect("data_cache_behavior_memcached_test", 100);
         $actual = DataCacheBehaviorMemcachedTestQuery::create()->findById(100);
 
+        $this->assertInstanceOf("PropelObjectCollection", $actual);
+        $this->assertCount(1, $actual);
         $this->assertEquals($expected, $actual);
     }
 
@@ -70,6 +72,7 @@ EOF;
         $this->deleteDirect("data_cache_behavior_memcached_test", 100);
         $actual = DataCacheBehaviorMemcachedTestQuery::create()->findOneById(100);
 
+        $this->assertInstanceOf("DataCacheBehaviorMemcachedTest", $actual);
         $this->assertEquals($expected, $actual);
     }
 
@@ -77,10 +80,11 @@ EOF;
     {
         $this->setData(100, "foo");
 
-        $expected = DataCacheBehaviorMemcachedTestQuery::create()->findOneById(100);
+        $expected = DataCacheBehaviorMemcachedTestQuery::create()->findPk(100);
         $this->deleteDirect("data_cache_behavior_memcached_test", 100);
-        $actual = DataCacheBehaviorMemcachedTestQuery::create()->findOneById(100);
+        $actual = DataCacheBehaviorMemcachedTestQuery::create()->findPk(100);
 
+        $this->assertInstanceOf("DataCacheBehaviorMemcachedTest", $actual);
         $this->assertEquals($expected, $actual);
     }
 

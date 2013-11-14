@@ -114,8 +114,10 @@ public static function cacheDelete(\$key)
     {
         $peerClassname = $this->builder->getStubPeerBuilder()->getClassname();
 
-        $script = $parser->findMethod('doDeleteAll');
-        $script = str_replace( '$con->commit();', "\$con->commit();\n            {$peerClassname}::purgeCache();", $script );
+        $search  = "\$con->commit();";
+        $replace = "\$con->commit();\n            {$peerClassname}::purgeCache();";
+        $script  = $parser->findMethod('doDeleteAll');
+        $script  = str_replace($search, $replace, $script);
 
         $parser->replaceMethod("doDeleteAll", $script);
     }
