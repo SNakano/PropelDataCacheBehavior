@@ -113,44 +113,10 @@ public static function cacheDelete(\$key)
     protected function replaceDoDeleteAll(&$parser)
     {
         $peerClassname = $this->builder->getStubPeerBuilder()->getClassname();
-        $tableName = $this->builder->getStubObjectBuilder()->getTable()->getName();
 
-        $script = "
-
-    /**
-     * Deletes all rows from the $tableName table.
-     *
-     * @param      PropelPDO \$con the connection to use
-     * @return int             The number of affected rows (if supported by underlying database driver).
-     * @throws PropelException
-     */
-    public static function doDeleteAll(PropelPDO \$con = null)
-    {
-        if (\$con === null) {
-            \$con = Propel::getConnection({$peerClassname}::DATABASE_NAME, Propel::CONNECTION_WRITE);
-        }
-        \$affectedRows = 0; // initialize var to track total num of affected rows
-        try {
-            // use transaction because \$criteria could contain info
-            // for more than one table or we could emulating ON DELETE CASCADE, etc.
-            \$con->beginTransaction();
-            \$affectedRows += BasePeer::doDeleteAll({$peerClassname}::TABLE_NAME, \$con, {$peerClassname}::DATABASE_NAME);
-            // Because this db requires some delete cascade/set null emulation, we have to
-            // clear the cached instance *after* the emulation has happened (since
-            // instances get re-added by the select statement contained therein).
-            {$peerClassname}::clearInstancePool();
-            {$peerClassname}::clearRelatedInstancePool();
-            \$con->commit();
-            {$peerClassname}::purgeCache();
-
-            return \$affectedRows;
-        } catch (PropelException \$e) {
-            \$con->rollBack();
-            throw \$e;
-        }
-    }";
+        $script = $parser->findMethod('doDeleteAll');
+        $script = str_replace( '$con->commit();', "\$con->commit();\n            {$peerClassname}::purgeCache();", $script );
 
         $parser->replaceMethod("doDeleteAll", $script);
     }
-
 }
