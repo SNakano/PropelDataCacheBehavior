@@ -43,6 +43,7 @@ class DataCacheBehaviorQueryBuilderModifier
 
         $script = "
 protected \$cacheKey      = '';
+protected \$locale		  = '';
 protected \$cacheEnable   = {$auto_cache};
 protected \$cacheLifeTime = {$lifetime};
         ";
@@ -62,8 +63,9 @@ protected \$cacheLifeTime = {$lifetime};
         $this->addIsCacheEnable($script);
         $this->addGetCacheKey($script);
         $this->addSetCacheKey($script);
-        $this->addSetLifeTime($script);
-        $this->addGetLifeTime($script);
+		$this->addSetLocale($script);
+		$this->addSetLifeTime($script);
+		$this->addGetLifeTime($script);
         $this->addFind($script);
         $this->addFindOne($script);
 
@@ -125,12 +127,24 @@ public function getCacheKey()
     \$sql_hash    = hash('md4', BasePeer::createSelectSql(\$this, \$params));
     \$params_hash = hash('md4', json_encode(\$params));
 
-    \$this->cacheKey = \$sql_hash . '_' . \$params_hash;
+    \$this->cacheKey = \$sql_hash . '_' . \$params_hash . '_' . \$this->locale;
 
     return \$this->cacheKey;
 }
         ";
     }
+
+	protected function addSetLocale(&$script)
+	{
+		$script .= "
+public function setLocale(\$locale)
+{
+	\$this->locale = \$locale;
+
+	return \$this;
+}
+";
+	}
 
     protected function addSetCacheKey(&$script)
     {
@@ -168,7 +182,6 @@ public function getLifeTime()
 
     protected function addFind(&$script)
     {
-        $className = $this->builder->getStubObjectBuilder()->getClassname();
         $peerClassname = $this->builder->getStubPeerBuilder()->getClassname();
 
         $script .= "
