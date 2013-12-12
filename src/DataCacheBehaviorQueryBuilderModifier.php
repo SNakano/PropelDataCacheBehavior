@@ -43,7 +43,7 @@ class DataCacheBehaviorQueryBuilderModifier
 
         $script = "
 protected \$cacheKey      = '';
-protected \$locale		  = '';
+protected \$cacheLocale	  = '';
 protected \$cacheEnable   = {$auto_cache};
 protected \$cacheLifeTime = {$lifetime};
         ";
@@ -127,7 +127,7 @@ public function getCacheKey()
     \$sql_hash    = hash('md4', BasePeer::createSelectSql(\$this, \$params));
     \$params_hash = hash('md4', json_encode(\$params));
 
-    \$this->cacheKey = \$sql_hash . '_' . \$params_hash . '_' . \$this->locale;
+    \$this->cacheKey = \$sql_hash . '_' . \$params_hash . '_' . \$this->cacheLocale;
 
     return \$this->cacheKey;
 }
@@ -137,9 +137,9 @@ public function getCacheKey()
 	protected function addSetLocale(&$script)
 	{
 		$script .= "
-public function setLocale(\$locale)
+public function setCacheLocale(\$locale)
 {
-	\$this->locale = \$locale;
+	\$this->cacheLocale = \$locale;
 
 	return \$this;
 }
