@@ -43,7 +43,7 @@ class DataCacheBehaviorQueryBuilderModifier
 
         $script = "
 protected \$cacheKey      = '';
-protected \$cacheLocale	  = '';
+protected \$cacheLocale   = '';
 protected \$cacheEnable   = {$auto_cache};
 protected \$cacheLifeTime = {$lifetime};
         ";
@@ -63,9 +63,9 @@ protected \$cacheLifeTime = {$lifetime};
         $this->addIsCacheEnable($script);
         $this->addGetCacheKey($script);
         $this->addSetCacheKey($script);
-		$this->addSetLocale($script);
-		$this->addSetLifeTime($script);
-		$this->addGetLifeTime($script);
+        $this->addSetLocale($script);
+        $this->addSetLifeTime($script);
+        $this->addGetLifeTime($script);
         $this->addFind($script);
         $this->addFindOne($script);
 
@@ -134,17 +134,17 @@ public function getCacheKey()
         ";
     }
 
-	protected function addSetLocale(&$script)
-	{
-		$script .= "
+    protected function addSetLocale(&$script)
+    {
+        $script .= "
 public function setCacheLocale(\$locale)
 {
-	\$this->cacheLocale = \$locale;
+    \$this->cacheLocale = \$locale;
 
-	return \$this;
+    return \$this;
 }
 ";
-	}
+    }
 
     protected function addSetCacheKey(&$script)
     {
