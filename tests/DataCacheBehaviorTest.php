@@ -175,6 +175,21 @@ EOF;
         $this->assertNull($lang_ja);
     }
 
+    public function testCompatibleCacheKeyWithoutLocale()
+    {
+        $lang_en = DataCacheBehaviorMemcachedTestQuery::create()->setCacheLocale("en");
+        $lang_en->findOneById(100);
+
+        $lang_en_cache_key = $lang_en->getCacheKey();
+        $this->assertRegExp('/^[a-zA-Z0-9]+_[a-zA-Z0-9]+_en$/', $lang_en_cache_key);
+
+        $without_locale = DataCacheBehaviorMemcachedTestQuery::create();
+        $without_locale->findOneById(100);
+
+        $without_locale_cache_key = $without_locale->getCacheKey();
+        $this->assertRegExp('/^[a-zA-Z0-9]+_[a-zA-Z0-9]+$/', $without_locale_cache_key);
+    }
+
     private function setData($id, $name)
     {
         $obj = new DataCacheBehaviorMemcachedTest;
