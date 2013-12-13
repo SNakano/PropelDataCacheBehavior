@@ -152,6 +152,29 @@ EOF;
         $this->assertNull($result);
     }
 
+    public function testCacheLocale()
+    {
+        $this->setData(100, "foo");
+        $lang_en = DataCacheBehaviorMemcachedTestQuery::create()
+                    ->setCacheLocale("en")
+                    ->findOneById(100);
+
+        $this->deleteDirect("data_cache_behavior_memcached_test", 100);
+
+        $cached_lang_en = DataCacheBehaviorMemcachedTestQuery::create()
+                    ->setCacheLocale("en")
+                    ->findOneById(100);
+
+        $lang_ja = DataCacheBehaviorMemcachedTestQuery::create()
+                    ->setCacheLocale("ja")
+                    ->findOneById(100);
+
+        $this->assertInstanceOf("DataCacheBehaviorMemcachedTest", $lang_en);
+        $this->assertInstanceOf("DataCacheBehaviorMemcachedTest", $cached_lang_en);
+        $this->assertEquals($lang_en, $cached_lang_en);
+        $this->assertNull($lang_ja);
+    }
+
     private function setData($id, $name)
     {
         $obj = new DataCacheBehaviorMemcachedTest;
