@@ -1,17 +1,18 @@
 PropelDataCacheBehavior
 ==========================
 [![Build Status](https://travis-ci.org/SNakano/PropelDataCacheBehavior.png)](https://travis-ci.org/SNakano/PropelDataCacheBehavior)
+[![Latest Stable Version](https://poser.pugx.org/snakano/propel-data-cache-behavior/v/stable.png)](https://packagist.org/packages/snakano/propel-data-cache-behavior)
+[![Total Downloads](https://poser.pugx.org/snakano/propel-data-cache-behavior/downloads.png)](https://packagist.org/packages/snakano/propel-data-cache-behavior)
 
-The Propel Data Cache Behavior provide data cacaching.
+A Propel ORM behavior that provide auto data caching to your model.
 
-- support caching system APC and memcached
+- support caching system APC and memcached (via [DominoCacheStore](https://github.com/SNakano/CacheStore))
 - auto caching and auto flush.
 
+#### What's the difference Query Cache Behavior
 
-### What's the difference [Query Cache Behavior](http://propelorm.org/behaviors/query-cache.html)
-
-Query Cache Behavior is caching transformation of a Query object (caching SQL code).<br />
-This Behavior is caching the results of database. (result cache)
+[Query Cache Behavior](http://propelorm.org/behaviors/query-cache.html) is caching transformation of a Query object (caching SQL code).<br />
+This Behavior is caching the results of database. (result data cache)
 
 
 Requirements
@@ -24,7 +25,10 @@ Requirements
 Install
 -------
 
-using Composer(recommended):
+### Composer
+
+Add a dependency on `snakano/propel-data-cache-behavior` to your project's `composer.json` file.
+
 ```javascript
 {
     "require": {
@@ -33,15 +37,14 @@ using Composer(recommended):
 }
 ```
 
-Then, if you don't use Composer, or an autoloader in your application, add the
-following configuration to your `build.properties` or `propel.ini` file:
+Then, add the following configuration to your `build.properties` or `propel.ini` file:
 
 ```ini
 propel.behavior.data_cache.class = vendor.propel-datacache-behavior.src.DataCacheBehavior
 ```
 
-Usage
------
+Configuration
+-------------
 
 ### schema.xml
 
@@ -58,6 +61,8 @@ Usage
 ```
 
 ### if use memcached.
+
+Add the following configuration code to your project bootstraping file.
 
 ```php
 // configure memcached setting.
@@ -114,11 +119,21 @@ $book->save();  // purge cache.
 ```
 
 - expire cache lifetime.
-- call save() method.
-- call delete() method.
-- call BookPeer::doDeleteAll() method.
-- call BookPeer::purgeCache() method.
+- call `save()` method.
+- call `delete()` method.
+- call `BookPeer::doDeleteAll()` method.
+- call `BookPeer::purgeCache()` method.
 
+### Manually delete cache.
+
+```php
+$title = 'War And Peace';
+$query = BookQuery::create();
+$book  = $query->filterByTitle($title)->findOne();
+$cacheKey = $query->getCacheKey(); // get cache key.
+
+BookPeer::cacheDelete($cacheKey);  // delete cache by key.
+```
 
 License
 -------
