@@ -9,4 +9,5 @@ php:
 
 before_script:
   - echo "extension = memcached.so" >> ~/.phpenv/versions/$(phpenv version-name)/etc/php.ini
-  - composer install
+  - curl -s http://getcomposer.org/installer | php
+  - php composer.phar --dev install
