@@ -6,7 +6,7 @@ PropelDataCacheBehavior
 
 A Propel ORM behavior that provide auto data caching to your model.
 
-- support caching system APC and memcached (via [DominoCacheStore](https://github.com/SNakano/CacheStore))
+- support caching system APC, memcached and Redis (via [DominoCacheStore](https://github.com/SNakano/CacheStore))
 - auto caching and auto flush.
 
 #### What's the difference Query Cache Behavior
