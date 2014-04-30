@@ -70,6 +70,8 @@ public static function cacheFetch(\$key)
     \$result = \Domino\CacheStore\Factory::factory('{$backend}')->get(self::TABLE_NAME, \$key);
 
     if (\$result !== null) {
+        $unserializedResult = unserialize($result);
+        $result = ($unserializedResult === FALSE) ? $result : $unserializedResult;
         if (\$result instanceof ArrayAccess) {
             foreach (\$result as \$element) {
                 if (\$element instanceof {$objectClassname}) {
@@ -93,7 +95,7 @@ public static function cacheFetch(\$key)
         $script .= "
 public static function cacheStore(\$key, \$data, \$lifetime)
 {
-    return \Domino\CacheStore\Factory::factory('{$backend}')->set(self::TABLE_NAME, \$key, \$data, \$lifetime);
+    return \Domino\CacheStore\Factory::factory('{$backend}')->set(self::TABLE_NAME, \$key, serialize(\$data), \$lifetime);
 }
         ";
     }
