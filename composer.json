@@ -1,5 +1,5 @@
 {
-    "name": "beethoven/propel-data-cache-behavior",
+    "name": "mozart/propel-data-cache-behavior",
     "description": "A Propel ORM behavior that provide serialized data caching to your model.",
     "keywords": ["propel", "behavior", "cache"],
     "license": "MIT",
