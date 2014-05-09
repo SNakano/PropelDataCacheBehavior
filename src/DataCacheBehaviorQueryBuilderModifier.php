@@ -197,6 +197,12 @@ public function getLifeTime()
 public function find(\$con = null)
 {
     if (\$this->isCacheEnable() && \$cache = {$peerClassname}::cacheFetch(\$this->getCacheKey())) {
+        if (\$cache instanceof \\PropelCollection)
+        {
+            \$formatter = \$this->getFormatter()->init(\$this);
+            \$cache->setFormatter(\$formatter);
+        }
+
         return \$cache;
     }
 
