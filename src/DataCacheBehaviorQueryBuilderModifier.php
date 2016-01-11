@@ -14,32 +14,38 @@
  * @license MIT
  * @package propel.generator.behavior
  */
-class DataCacheBehaviorQueryBuilderModifier
+class DataCacheBehaviorQueryBuilderModifier extends Behavior
 {
-    protected $behavior;
+    /** @var OMBuilder */
     protected $builder;
 
-    public function __construct($behavior)
+    /**
+     * @param DataModelBuilder $builder
+     * @return string
+     */
+    public function postUpdateQuery(DataModelBuilder $builder)
     {
-        $this->behavior = $behavior;
+        $peerClassName = $builder->getStubPeerBuilder()->getClassname();
+
+        return "{$peerClassName}::purgeCache();";
     }
 
-    public function postUpdateQuery($builder)
-    {
-        $peerClassname = $builder->getStubPeerBuilder()->getClassname();
-
-        return "{$peerClassname}::purgeCache();";
-    }
-
-    public function postDeleteQuery($builder)
+    /**
+     * @param DataModelBuilder $builder
+     * @return string
+     */
+    public function postDeleteQuery(DataModelBuilder $builder)
     {
         return $this->postUpdateQuery($builder);
     }
 
-    public function queryAttributes($builder)
+    /**
+     * @return string
+     */
+    public function queryAttributes()
     {
-        $lifetime   = $this->behavior->getParameter("lifetime");
-        $auto_cache = $this->behavior->getParameter("auto_cache");
+        $lifetime   = $this->parameters['lifetime'];
+        $auto_cache = $this->parameters['auto_cache'];
 
         $script = "
 protected \$cacheKey      = '';
@@ -51,13 +57,17 @@ protected \$cacheLifeTime = {$lifetime};
         return $script;
     }
 
-    public function queryMethods($builder)
+    /**
+     * @param OMBuilder $builder
+     * @return string
+     */
+    public function queryMethods(OMBuilder $builder)
     {
         $builder->declareClasses('BasePeer');
 
         $this->builder = $builder;
 
-        $script = "";
+        $script = '';
         $this->addSetCacheEnable($script);
         $this->addSetCacheDisable($script);
         $this->addIsCacheEnable($script);
@@ -68,10 +78,15 @@ protected \$cacheLifeTime = {$lifetime};
         $this->addGetLifeTime($script);
         $this->addFind($script);
         $this->addFindOne($script);
+        $this->addPurgeFromCache($script);
+        $this->addDeleteFromCache($script);
 
         return $script;
     }
 
+    /**
+     * @param string $script
+     */
     public function queryFilter(&$script)
     {
         $parser = new PropelPHPParser($script, true);
@@ -81,9 +96,15 @@ protected \$cacheLifeTime = {$lifetime};
         $script = $parser->getCode();
     }
 
+    /**
+     * @param string $script
+     */
     protected function addSetCacheEnable(&$script)
     {
         $script .= "
+/**
+ * @return \$this
+ */
 public function setCacheEnable()
 {
     \$this->cacheEnable = true;
@@ -93,9 +114,15 @@ public function setCacheEnable()
         ";
     }
 
+    /**
+     * @param string $script
+     */
     protected function addSetCacheDisable(&$script)
     {
         $script .= "
+/**
+ * @return \$this
+ */
 public function setCacheDisable()
 {
     \$this->cacheEnable = false;
@@ -105,9 +132,15 @@ public function setCacheDisable()
         ";
     }
 
+    /**
+     * @param string $script
+     */
     protected function addIsCacheEnable(&$script)
     {
         $script .= "
+/**
+ * @return bool
+ */
 public function isCacheEnable()
 {
     return (bool)\$this->cacheEnable;
@@ -115,9 +148,15 @@ public function isCacheEnable()
         ";
     }
 
+    /**
+     * @param string $script
+     */
     protected function addGetCacheKey(&$script)
     {
         $script .= "
+/**
+ * @return string
+ */
 public function getCacheKey()
 {
     if (\$this->cacheKey) {
@@ -134,9 +173,16 @@ public function getCacheKey()
         ";
     }
 
+    /**
+     * @param string $script
+     */
     protected function addSetLocale(&$script)
     {
         $script .= "
+/**
+ * @param string \$locale
+ * @return \$this
+ */
 public function setCacheLocale(\$locale)
 {
     \$this->cacheLocale = \$locale;
@@ -146,9 +192,16 @@ public function setCacheLocale(\$locale)
 ";
     }
 
+    /**
+     * @param string $script
+     */
     protected function addSetCacheKey(&$script)
     {
         $script .= "
+/**
+ * @param string \$cacheKey
+ * @return \$this
+ */
 public function setCacheKey(\$cacheKey)
 {
     \$this->cacheKey = \$cacheKey;
@@ -158,9 +211,16 @@ public function setCacheKey(\$cacheKey)
 ";
     }
 
+    /**
+     * @param string $script
+     */
     protected function addSetLifeTime(&$script)
     {
         $script .= "
+/**
+ * @param int \$lifetime
+ * @return \$this
+ */
 public function setLifeTime(\$lifetime)
 {
     \$this->cacheLifeTime = \$lifetime;
@@ -170,9 +230,15 @@ public function setLifeTime(\$lifetime)
         ";
     }
 
+    /**
+     * @param string $script
+     */
     protected function addGetLifeTime(&$script)
     {
         $script .= "
+/**
+ * @return int
+ */
 public function getLifeTime()
 {
     return \$this->cacheLifeTime;
@@ -180,9 +246,13 @@ public function getLifeTime()
         ";
     }
 
+    /**
+     * @param string $script
+     */
     protected function addFind(&$script)
     {
-        $peerClassname = $this->builder->getStubPeerBuilder()->getClassname();
+        $className      = $this->builder->getStubObjectBuilder()->getClassname();
+        $peerClassName  = $this->builder->getStubPeerBuilder()->getClassname();
 
         $script .= "
 /**
@@ -192,11 +262,11 @@ public function getLifeTime()
  *
  * @param PropelPDO \$con an optional connection object
  *
- * @return PropelObjectCollection|array|mixed the list of results, formatted by the current formatter
+ * @return PropelObjectCollection|{$className}[]|array|mixed the list of results, formatted by the current formatter
  */
 public function find(\$con = null)
 {
-    if (\$this->isCacheEnable() && \$cache = {$peerClassname}::cacheFetch(\$this->getCacheKey())) {
+    if (\$this->isCacheEnable() && \$cache = {$peerClassName}::cacheFetch(\$this->getCacheKey())) {
         if (\$cache instanceof \\PropelCollection) {
             \$formatter = \$this->getFormatter()->init(\$this);
             \$cache->setFormatter(\$formatter);
@@ -215,7 +285,7 @@ public function find(\$con = null)
     \$data = \$criteria->getFormatter()->init(\$criteria)->format(\$stmt);
 
     if (\$this->isCacheEnable()) {
-        {$peerClassname}::cacheStore(\$this->getCacheKey(), \$data, \$this->getLifeTime());
+        {$peerClassName}::cacheStore(\$this->getCacheKey(), \$data, \$this->getLifeTime());
     }
 
     return \$data;
@@ -223,10 +293,13 @@ public function find(\$con = null)
         ";
     }
 
+    /**
+     * @param string $script
+     */
     protected function addFindOne(&$script)
     {
-        $className = $this->builder->getStubObjectBuilder()->getClassname();
-        $peerClassname = $this->builder->getStubPeerBuilder()->getClassname();
+        $className      = $this->builder->getStubObjectBuilder()->getClassname();
+        $peerClassName  = $this->builder->getStubPeerBuilder()->getClassname();
 
         $script .= "
 /**
@@ -236,11 +309,11 @@ public function find(\$con = null)
  *
  * @param PropelPDO \$con an optional connection object
  *
- * @return mixed the result, formatted by the current formatter
+ * @return mixed|{$className} the result, formatted by the current formatter
  */
 public function findOne(\$con = null)
 {
-    if (\$this->isCacheEnable() && \$cache = {$peerClassname}::cacheFetch(\$this->getCacheKey())) {
+    if (\$this->isCacheEnable() && \$cache = {$peerClassName}::cacheFetch(\$this->getCacheKey())) {
         if (\$cache instanceof {$className}) {
             return \$cache;
         }
@@ -257,7 +330,7 @@ public function findOne(\$con = null)
     \$data = \$criteria->getFormatter()->init(\$criteria)->formatOne(\$stmt);
 
     if (\$this->isCacheEnable()) {
-        {$peerClassname}::cacheStore(\$this->getCacheKey(), \$data, \$this->getLifeTime());
+        {$peerClassName}::cacheStore(\$this->getCacheKey(), \$data, \$this->getLifeTime());
     }
 
     return \$data;
@@ -265,7 +338,46 @@ public function findOne(\$con = null)
         ";
     }
 
-    protected function replaceFindPk(&$parser)
+    /**
+     * @param string $script
+     */
+    protected function addPurgeFromCache(&$script)
+    {
+        $peerClassName  = $this->builder->getStubPeerBuilder()->getClassname();
+
+        $script .= '
+/**
+ * @return boolean            success or failure
+ */
+public function purgeFromCache()
+{
+    return ' . $peerClassName . '::purgeCache();
+}
+        ';
+    }
+
+    /**
+     * @param string $script
+     */
+    protected function addDeleteFromCache(&$script)
+    {
+        $peerClassName  = $this->builder->getStubPeerBuilder()->getClassname();
+
+        $script .= '
+/**
+ * @return boolean            success or failure
+ */
+public function deleteFromCache()
+{
+    return ' . $peerClassName . '::cacheDelete($this->getCacheKey());
+}
+        ';
+    }
+
+    /**
+     * @param PropelPHPParser $parser
+     */
+    protected function replaceFindPk(PropelPHPParser $parser)
     {
         $search  = "return \$this->findPkSimple(\$key, \$con);";
         $replace = "return \$this->filterByPrimaryKey(\$key)->findOne(\$con);";

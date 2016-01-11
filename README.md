@@ -40,7 +40,7 @@ Add a dependency on `snakano/propel-data-cache-behavior` to your project's `comp
 Then, add the following configuration to your `build.properties` or `propel.ini` file:
 
 ```ini
-propel.behavior.data_cache.class = vendor.propel-datacache-behavior.src.DataCacheBehavior
+propel.behavior.data_cache.class = lib.vendor.snakano.propel-data-cache-behavior.src.DataCacheBehavior
 ```
 
 Configuration
@@ -53,9 +53,9 @@ Configuration
   <column name="id" required="true" primaryKey="true" autoIncrement="true" type="INTEGER" />
   <column name="title" type="VARCHAR" required="true" primaryString="true" />
   <behavior name="data_cache">
+    <parameter name="auto_cache" value="true" /> <!-- auto cache enable. default true (optional) -->
     <parameter name="backend" value="apc" />     <!-- cache system. "apc" or "memcache", default "apc". (optional) -->
     <parameter name="lifetime" value="3600" />   <!-- cache expire time (second). default 3600 (optional) -->
-    <parameter name="auto_cache" value="true" /> <!-- auto cache enable. default true (optional) -->
   </behavior>
 </table>
 ```

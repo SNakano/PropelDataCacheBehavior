@@ -14,23 +14,24 @@
  * @license MIT
  * @package propel.generator.behavior
  */
-class DataCacheBehaviorObjectBuilderModifier
+class DataCacheBehaviorObjectBuilderModifier extends Behavior
 {
-    protected $behavior;
-
-    public function __construct($behavior)
+    /**
+     * @param DataModelBuilder $builder
+     * @return string
+     */
+    public function postSave(DataModelBuilder $builder)
     {
-        $this->behavior = $behavior;
+        $peerClassName = $builder->getStubPeerBuilder()->getClassname();
+
+        return "{$peerClassName}::purgeCache();";
     }
 
-    public function postSave($builder)
-    {
-        $peerClassname = $builder->getStubPeerBuilder()->getClassname();
-
-        return "{$peerClassname}::purgeCache();";
-    }
-
-    public function postDelete($builder)
+    /**
+     * @param DataModelBuilder $builder
+     * @return string
+     */
+    public function postDelete(DataModelBuilder $builder)
     {
         return $this->postSave($builder);
     }
