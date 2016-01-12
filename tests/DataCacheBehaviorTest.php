@@ -152,6 +152,50 @@ EOF;
         $this->assertNull($result);
     }
 
+    public function testPurgeFromCache()
+    {
+        $this->setData(100, "foo");
+        $this->setData(200, "bar");
+
+        $foo = DataCacheBehaviorMemcachedTestQuery::create();
+        $foo->findOneById(100);
+        $fooKey = $foo->getCacheKey();
+
+        $bar = DataCacheBehaviorMemcachedTestQuery::create();
+        $bar->findOneById(200);
+        $barKey = $bar->getCacheKey();
+        
+        $foo->purgeFromCache();
+        
+        $fooCache = Domino\CacheStore\Factory::factory("memcached")->get("data_cache_behavior_memcached_test", $fooKey);
+        $this->assertNull($fooCache);
+
+        $barCache = Domino\CacheStore\Factory::factory("memcached")->get("data_cache_behavior_memcached_test", $barKey);
+        $this->assertNull($barCache);
+    }
+
+    public function testDeleteFromCache()
+    {
+        $this->setData(100, "foo");
+        $this->setData(200, "bar");
+
+        $foo = DataCacheBehaviorMemcachedTestQuery::create();
+        $foo->findOneById(100);
+        $fooKey = $foo->getCacheKey();
+
+        $bar = DataCacheBehaviorMemcachedTestQuery::create();
+        $barObj = $bar->findOneById(200);
+        $barKey = $bar->getCacheKey();
+        
+        $foo->deleteFromCache();
+        
+        $fooCache = Domino\CacheStore\Factory::factory("memcached")->get("data_cache_behavior_memcached_test", $fooKey);
+        $this->assertNull($fooCache);
+
+        $barCache = Domino\CacheStore\Factory::factory("memcached")->get("data_cache_behavior_memcached_test", $barKey);
+        $this->assertEquals($barObj, $barCache);
+    }
+
     public function testCacheLocale()
     {
         $this->setData(100, "foo");
