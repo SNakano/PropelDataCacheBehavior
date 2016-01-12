@@ -14,20 +14,19 @@
  * @license MIT
  * @package propel.generator.behavior
  */
-class DataCacheBehaviorPeerBuilderModifier
+class DataCacheBehaviorPeerBuilderModifier extends Behavior
 {
-    protected $behavior;
+    /** @var DataModelBuilder */
     protected $builder;
 
-    public function __construct($behavior)
-    {
-        $this->behavior = $behavior;
-    }
-
+    /**
+     * @param DataModelBuilder $builder
+     * @return string
+     */
     public function staticMethods($builder)
     {
-        $this->builder = $builder;
-        $script = "";
+        $this->builder  = $builder;
+        $script         = '';
 
         $this->addPurgeCache($script);
         $this->addCacheFetch($script);
@@ -37,6 +36,9 @@ class DataCacheBehaviorPeerBuilderModifier
         return $script;
     }
 
+    /**
+     * @param string $script
+     */
     public function peerFilter(&$script)
     {
         $parser = new PropelPHPParser($script, true);
@@ -46,11 +48,17 @@ class DataCacheBehaviorPeerBuilderModifier
         $script = $parser->getCode();
     }
 
+    /**
+     * @param string $script
+     */
     protected function addPurgeCache(&$script)
     {
-        $backend = $this->behavior->getParameter("backend");
+        $backend = $this->parameters['backend'];
 
         $script .= "
+/**
+ * @return boolean            success or failure
+ */
 public static function purgeCache()
 {
     return \Domino\CacheStore\Factory::factory('{$backend}')->clearByNamespace(self::TABLE_NAME);
@@ -58,26 +66,34 @@ public static function purgeCache()
         ";
     }
 
+    /**
+     * @param string $script
+     */
     protected function addCacheFetch(&$script)
     {
-        $backend = $this->behavior->getParameter("backend");
-        $peerClassname = $this->builder->getStubPeerBuilder()->getClassname();
-        $objectClassname = $this->builder->getStubObjectBuilder()->getClassname();
+        $backend            = $this->parameters['backend'];
+        $peerClassName      = $this->builder->getStubPeerBuilder()->getClassname();
+        $objectClassName    = $this->builder->getStubObjectBuilder()->getClassname();
+        $weAreInAnNameSpace = (strlen($this->builder->getStubPeerBuilder()->getNamespace()) > 0);
 
         $script .= "
+/**
+ * @param string \$key
+ * @return null|array|{$objectClassName}|{$objectClassName}[]
+ */
 public static function cacheFetch(\$key)
 {
     \$result = \Domino\CacheStore\Factory::factory('{$backend}')->get(self::TABLE_NAME, \$key);
 
     if (\$result !== null) {
-        if (\$result instanceof ArrayAccess) {
+        if (\$result instanceof " . ($weAreInAnNameSpace ? '\\' : '') . "ArrayAccess) {
             foreach (\$result as \$element) {
-                if (\$element instanceof {$objectClassname}) {
-                    {$peerClassname}::addInstanceToPool(\$element);
+                if (\$element instanceof {$objectClassName}) {
+                    {$peerClassName}::addInstanceToPool(\$element);
                 }
             }
-        } else if (\$result instanceof {$objectClassname}) {
-            {$peerClassname}::addInstanceToPool(\$result);
+        } else if (\$result instanceof {$objectClassName}) {
+            {$peerClassName}::addInstanceToPool(\$result);
         }
     }
 
@@ -86,11 +102,19 @@ public static function cacheFetch(\$key)
         ";
     }
 
+    /**
+     * @param string $script
+     */
     protected function addCacheStore(&$script)
     {
-        $backend = $this->behavior->getParameter("backend");
+        $backend = $this->parameters['backend'];
 
         $script .= "
+/**
+ * @param string \$key
+ * @param mixed \$data
+ * @param int \$lifetime
+ */
 public static function cacheStore(\$key, \$data, \$lifetime)
 {
     return \Domino\CacheStore\Factory::factory('{$backend}')->set(self::TABLE_NAME, \$key, \$data, \$lifetime);
@@ -98,11 +122,18 @@ public static function cacheStore(\$key, \$data, \$lifetime)
         ";
     }
 
+    /**
+     * @param string $script
+     */
     protected function addCacheDelete(&$script)
     {
-        $backend = $this->behavior->getParameter("backend");
+        $backend = $this->parameters['backend'];
 
         $script .= "
+/**
+ * @param string \$key
+ * @return boolean            success or failure
+ */
 public static function cacheDelete(\$key)
 {
     return \Domino\CacheStore\Factory::factory('{$backend}')->clear(self::TABLE_NAME, \$key);
@@ -110,12 +141,17 @@ public static function cacheDelete(\$key)
         ";
     }
 
-    protected function replaceDoDeleteAll(&$parser)
+
+
+    /**
+     * @param PropelPHPParser $parser
+     */
+    protected function replaceDoDeleteAll($parser)
     {
-        $peerClassname = $this->builder->getStubPeerBuilder()->getClassname();
+        $peerClassName = $this->builder->getStubPeerBuilder()->getClassname();
 
         $search  = "\$con->commit();";
-        $replace = "\$con->commit();\n            {$peerClassname}::purgeCache();";
+        $replace = "\$con->commit();\n            {$peerClassName}::purgeCache();";
         $script  = $parser->findMethod('doDeleteAll');
         $script  = str_replace($search, $replace, $script);
 
